@@ -13,7 +13,7 @@ option(PYTHON2 "Compile with python 2 support" ON)
 math(EXPR PLATFORM_BITS "${CMAKE_SIZEOF_VOID_P} * 8")
 set(PSTACK_BIN "pstack" CACHE STRING "Name of the 'pstack' binary")
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/" CACHE STRING "Rpath to install for binaries or the empty string")
-set(LIBTYPE "SHARED" CACHE STRING "Build libraries as STATIC or SHARED")
+set(LIBTYPE "STATIC" CACHE STRING "Build libraries as STATIC or SHARED")
 set (PYTHON3_SOURCE "" CACHE STRING "Path to the CPython source code")
 option(TIDY "Run clang-tidy on the source" False)
 
@@ -167,14 +167,20 @@ if (NOT (Python2_Development_FOUND) AND PYTHON2)
 endif()
 
 # bonus: heap debugger
-add_library(hdbg SHARED heap.c)
+add_library(hdbg STATIC heap.c)
 add_executable(hdmp hdmp.cc)
 target_link_libraries(hdmp dwelf procman)
 target_link_libraries(hdbg dl)
 
-install(TARGETS ${PSTACK_BIN} canal)
-install(TARGETS hdmp)
-install(TARGETS dwelf procman hdbg)
+install(TARGETS ${PSTACK_BIN} canal
+RUNTIME DESTINATION bin
+)
+install(TARGETS hdmp
+RUNTIME DESTINATION bin
+)
+install(TARGETS dwelf procman hdbg
+ARCHIVE DESTINATION lib
+)
 install(FILES ${CMAKE_SOURCE_DIR}/pstack.1 DESTINATION share/man/man1 RENAME ${PSTACK_BIN}.1 )
 install(DIRECTORY libpstack DESTINATION include)
 install(CODE "execute_process (COMMAND setcap cap_sys_ptrace+ep ${DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/${PSTACK_BIN} RESULT_VARIABLE ret)
